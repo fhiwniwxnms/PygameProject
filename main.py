@@ -4,26 +4,24 @@ import copy
 
 pygame.init()
 
-from nltk.corpus import words
-
-wordlist = words.words()
+words_eng = open('eng_words.txt', encoding='utf-8').read()
+wordlist_eng = words_eng.lower().split('\n')
 len_index = []
 length = 1
 
-wordlist.sort(key=len)
-for i in range(len(wordlist)):
-    if len(wordlist[i]) > length:
+wordlist_eng.sort(key=len)
+for i in range(len(wordlist_eng)):
+    if len(wordlist_eng[i]) > length:
         length += 1
         len_index.append(i)
-len_index.append(len(wordlist))
-print(len_index)
+len_index.append(len(wordlist_eng))
 
 WIDTH = 800
 HEIGHT = 600
 screen = pygame.display.set_mode([WIDTH, HEIGHT])
 pygame.display.set_caption('Клавиатурные бега')
-icon = pygame.image.load('assets/images/icon.png')
-pygame.display.set_icon(icon)
+# icon = pygame.image.load('assets/images/icon.png')
+# pygame.display.set_icon(icon)
 surface = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
 timer = pygame.time.Clock()
 fps = 60
@@ -34,8 +32,10 @@ lives = 5
 paused = True
 submit = ''
 word_objects = []
-letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
-           'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
+eng_letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+               'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
+rus_letters = ['а', 'б', 'в', 'г', 'д', 'е', 'ё', 'ж', 'з', 'и', 'и', 'к', 'л', 'м', 'н', 'о', 'п',
+               'р', 'с', 'т', 'у', 'ф', 'х', 'ц', 'ч', 'ш', 'щ', 'ъ', 'ы', 'ь', 'э', 'ю', 'я']
 new_level = True
 choices = [False, True, False, False, False, False, False]
 
@@ -176,7 +176,7 @@ def generate_level():
         x_pos = random.randint(WIDTH, WIDTH + 1000)
         ind_sel = random.choice(include)
         index = random.randint(ind_sel[0], ind_sel[1])
-        text = wordlist[index].lower()
+        text = wordlist_eng[index].lower()
         new_word = Word(text, speed, x_pos, y_pos)
         word_objs.append(new_word)
 
@@ -215,6 +215,8 @@ while running:
             if w.x_pos < -200:
                 word_objects.remove(w)
                 lives -= 1
+                score -= 20
+                # добавить звук отнимания жизни
     if len(word_objects) <= 0 and not paused:
         level += 1
         new_level = True
@@ -234,7 +236,7 @@ while running:
 
         if event.type == pygame.KEYDOWN:
             if not paused:
-                if event.unicode.lower() in letters:
+                if (event.unicode.lower() in eng_letters or event.unicode.lower() in rus_letters) and len(active_string) <= 8:
                     active_string += event.unicode.lower()
                     click.play()
                 if event.key == pygame.K_BACKSPACE and len(active_string) > 0:
