@@ -34,8 +34,6 @@ submit = ''
 word_objects = []
 eng_letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
                'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
-rus_letters = ['а', 'б', 'в', 'г', 'д', 'е', 'ё', 'ж', 'з', 'и', 'и', 'к', 'л', 'м', 'н', 'о', 'п',
-               'р', 'с', 'т', 'у', 'ф', 'х', 'ц', 'ч', 'ш', 'щ', 'ъ', 'ы', 'ь', 'э', 'ю', 'я']
 new_level = True
 choices = [False, True, False, False, False, False, False]
 
@@ -54,10 +52,12 @@ click = pygame.mixer.Sound('assets/music/click.mp3')
 correct = pygame.mixer.Sound('assets/music/correct.mp3')
 wrong = pygame.mixer.Sound('assets/music/vine-boom.mp3')
 lose = pygame.mixer.Sound('assets/music/the-sims-3-pc-broken-object-music.mp3')
+lives_less = pygame.mixer.Sound('assets/music/stationary-kill_gDwMUvN.mp3')
 click.set_volume(0.3)
 correct.set_volume(0.2)
 wrong.set_volume(0.3)
 lose.set_volume(0.5)
+lives_less.set_volume(0.5)
 
 file = open('high_score.txt', 'r')
 read = file.readlines()
@@ -172,7 +172,7 @@ def generate_level():
             include.append((len_index[i], len_index[i + 1]))
     for i in range(level):
         speed = random.randint(2, 3)
-        y_pos = random.randint(10 + (i * vertical_spacing), (i + 1) * vertical_spacing)
+        y_pos = random.randint(50 + (i * vertical_spacing), (i + 1) * vertical_spacing)
         x_pos = random.randint(WIDTH, WIDTH + 1000)
         ind_sel = random.choice(include)
         index = random.randint(ind_sel[0], ind_sel[1])
@@ -216,7 +216,7 @@ while running:
                 word_objects.remove(w)
                 lives -= 1
                 score -= 20
-                # добавить звук отнимания жизни
+                lives_less.play()
     if len(word_objects) <= 0 and not paused:
         level += 1
         new_level = True
@@ -236,7 +236,7 @@ while running:
 
         if event.type == pygame.KEYDOWN:
             if not paused:
-                if (event.unicode.lower() in eng_letters or event.unicode.lower() in rus_letters) and len(active_string) <= 8:
+                if event.unicode.lower() in eng_letters and len(active_string) <= 8:
                     active_string += event.unicode.lower()
                     click.play()
                 if event.key == pygame.K_BACKSPACE and len(active_string) > 0:
