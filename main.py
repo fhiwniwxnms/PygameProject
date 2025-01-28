@@ -4,15 +4,13 @@ import copy
 
 pygame.init()
 
-words_eng = open('eng_words.txt', encoding='utf-8').read()
-words_rus = open('rus_words.txt', encoding='utf-8').read()
+words_eng = open('assets/files/eng_words.txt', encoding='utf-8').read()
+words_rus = open('assets/files/rus_words.txt', encoding='utf-8').read()
 
 WIDTH = 800
 HEIGHT = 600
 screen = pygame.display.set_mode([WIDTH, HEIGHT])
 pygame.display.set_caption('Клавиатурные бега')
-# icon = pygame.image.load('assets/images/icon.png')
-# pygame.display.set_icon(icon)
 surface = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
 timer = pygame.time.Clock()
 fps = 60
@@ -53,7 +51,7 @@ wrong.set_volume(0.3)
 lose.set_volume(0.5)
 lives_less.set_volume(0.5)
 
-file = open('high_score.txt', 'r')
+file = open('assets/files/high_score.txt', 'r')
 read = file.readlines()
 high_score = int(read[0])
 file.close()
