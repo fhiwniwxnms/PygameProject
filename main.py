@@ -168,7 +168,7 @@ def check_answer(scor):
     return scor
 
 
-def generate_level(test: tuple[float, float] = (2, 2.7)):
+def generate_level(test: tuple[float, float] = (2, 3)):
     word_objs = []
     include = []
     vertical_spacing = (HEIGHT - 150) // level
@@ -198,7 +198,7 @@ def generate_level(test: tuple[float, float] = (2, 2.7)):
             include.append((len_index[i], len_index[i + 1]))
 
     for i in range(level):
-        speed = random.choice(test)
+        speed = random.choice(test)  # Сделать кнопки для выбора скорости
         y_pos = random.randint(50 + (i * vertical_spacing), (i + 1) * vertical_spacing)
         x_pos = random.randint(WIDTH, WIDTH + 1000)
         ind_sel = random.choice(include)
