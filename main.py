@@ -6,8 +6,6 @@ pygame.init()
 
 words_eng = open('eng_words.txt', encoding='utf-8').read()
 words_rus = open('rus_words.txt', encoding='utf-8').read()
-len_index = [1, 35, 209, 711, 1194, 1685, 2130, 2438]
-length = 1
 
 WIDTH = 800
 HEIGHT = 600
@@ -31,6 +29,7 @@ rus_letters = ['а', 'б', 'в', 'г', 'д', 'е', 'ё', 'ж', 'з', 'и', 'и',
                'р', 'с', 'т', 'у', 'ф', 'х', 'ц', 'ч', 'ш', 'щ', 'ъ', 'ы', 'ь', 'э', 'ю', 'я']
 new_level = True
 choices = [False, True, False, False, False, False, False]
+language = [False, True]
 
 header_font = pygame.font.Font('assets/fonts/PressStart2P.ttf', 25)
 pause_font = pygame.font.Font('assets/fonts/1up.ttf', 38)
@@ -118,6 +117,7 @@ def draw_screen():
 
 def draw_pause():
     choice_commits = copy.deepcopy(choices)
+    language_commits = copy.deepcopy(language)
     surface = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
     pygame.draw.rect(surface, '#afbfd1', [100, 100, 600, 375], 0, 5)
     pygame.draw.rect(surface, '#607fa3', [100, 100, 600, 375], 5, 5)
@@ -125,10 +125,6 @@ def draw_pause():
     resume_btn.draw()
     quit_btn = Button(450, 200, 'X', False, surface)
     quit_btn.draw()
-    rus_btn = Button(240, 420, 'R', False, surface)
-    rus_btn.draw()
-    eng_btn = Button(560, 420, 'E', False, surface)
-    eng_btn.draw()
 
     surface.blit(label_font.render('МЕНЮ', True, 'white'), (115, 115))
     surface.blit(label_font.render('СТАРТ!', True, 'white'), (205, 190))
@@ -148,8 +144,20 @@ def draw_pause():
         if choices[i]:
             pygame.draw.circle(surface, '#5aadd1', (160 + (i * 80), 330), 35, 5)
 
+    butt_text = ['R', 'E']
+    for i in range(len(language)):
+        btn = Button(240 + (i * 320), 420, butt_text[i], False, surface)
+        btn.draw()
+        if btn.clicked:
+            if language_commits[i]:
+                language_commits[i] = False
+            else:
+                language_commits[i] = True
+        if language[i]:
+            pygame.draw.circle(surface, '#5aadd1', (240 + (i * 320), 420), 35, 5)
+
     screen.blit(surface, (0, 0))
-    return resume_btn.clicked, choice_commits, quit_btn.clicked, rus_btn.clicked, eng_btn.clicked
+    return resume_btn.clicked, choice_commits, quit_btn.clicked, language_commits
 
 
 def check_answer(scor):
@@ -166,21 +174,38 @@ def generate_level(test: tuple[float, float] = (2, 2.7)):
     word_objs = []
     include = []
     vertical_spacing = (HEIGHT - 150) // level
+    len_index = []
+    length = 1
+
+    if language[0]:
+        wordlist = words_rus.lower().split('\n')
+    else:
+        wordlist = words_eng.lower().split('\n')
+
+    wordlist.sort(key=len)
+    for i in range(len(wordlist)):
+        if len(wordlist[i]) > length:
+            length += 1
+            len_index.append(i)
+    len_index.append(len(wordlist))
+
     if True not in choices:
         choices[0] = True
+    if True not in language:
+        language[1] = True
+    if language[0] and language[1]:
+        language[0] = False
     for i in range(len(choices)):
         if choices[i]:
             include.append((len_index[i], len_index[i + 1]))
+
     for i in range(level):
         speed = random.choice(test)
         y_pos = random.randint(50 + (i * vertical_spacing), (i + 1) * vertical_spacing)
         x_pos = random.randint(WIDTH, WIDTH + 1000)
         ind_sel = random.choice(include)
         index = random.randint(ind_sel[0], ind_sel[1])
-        if rus_butt:
-            text = words_rus.lower().split('\n')[index].lower()
-        else:
-            text = words_eng.lower().split('\n')[index].lower()
+        text = wordlist[index].lower()
         new_word = Word(text, speed, x_pos, y_pos)
         word_objs.append(new_word)
 
@@ -202,22 +227,12 @@ while running:
     timer.tick(fps)
     pause_butt = draw_screen()
     if paused:
-        resume_butt, changes, quit_butt, rus_butt, eng_butt = draw_pause([rus_butt, eng_butt]) # Записать значения кнопок в список для дальнейшей работы с ними
-        # повторить ту же логику с кнопками как и с changes
-        print(resume_butt, changes, quit_butt, rus_butt, eng_butt)
+        resume_butt, changes, quit_butt, changed_lang = draw_pause()
         if resume_butt:
             paused = False
         if quit_butt:
             check_high_score()
             running = False
-        if rus_butt:
-            print('rus_butt')
-            surface.blit(header_font.render('Русс', True, '#5aadd1'), (280, 410))
-            wordlist = words_rus.lower().split('\n')
-        if eng_butt:
-            print('eng_butt')
-            surface.blit(header_font.render('Англ', True, '#5aadd1'), (280, 410))
-            wordlist = words_eng.lower().split('\n')
 
     if new_level and not paused:
         word_objects = generate_level()
@@ -251,7 +266,8 @@ while running:
 
         if event.type == pygame.KEYDOWN:
             if not paused:
-                if (event.unicode.lower() in eng_letters or event.unicode.lower() in rus_letters) and len(active_string) <= 8:
+                if (event.unicode.lower() in eng_letters or event.unicode.lower() in rus_letters) and len(
+                        active_string) <= 8:
                     active_string += event.unicode.lower()
                     click.play()
                 if event.key == pygame.K_BACKSPACE and len(active_string) > 0:
@@ -269,6 +285,7 @@ while running:
         if event.type == pygame.MOUSEBUTTONUP and paused:
             if event.button == 1:
                 choices = changes
+                language = changed_lang
 
     if pause_butt:
         paused = True
