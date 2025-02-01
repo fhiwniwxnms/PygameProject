@@ -28,8 +28,10 @@ rus_letters = ['а', 'б', 'в', 'г', 'д', 'е', 'ё', 'ж', 'з', 'и', 'и',
 new_level = True
 choices = [False, True, False, False, False, False, False]
 language = [False, True]
+speed = [True, False, False]
 
 header_font = pygame.font.Font('assets/fonts/PressStart2P.ttf', 25)
+level_font = pygame.font.Font('assets/fonts/PressStart2P.ttf', 17)
 pause_font = pygame.font.Font('assets/fonts/1up.ttf', 38)
 banner_font = pygame.font.Font('assets/fonts/DotGothic16.ttf', 28)
 string_font = pygame.font.Font('assets/fonts/PressStart2P.ttf', 44)
@@ -58,11 +60,11 @@ file.close()
 
 
 class Word:
-    def __init__(self, text, speed, x_pos, y_pos):
+    def __init__(self, text, sp, x_pos, y_pos):
         self.x_pos = x_pos
         self.y_pos = y_pos
         self.text = text
-        self.speed = speed
+        self.speed = sp
 
     def draw(self):
         screen.blit(font.render(self.text, True, '#39608c'), (self.x_pos, self.y_pos))
@@ -116,23 +118,29 @@ def draw_screen():
 def draw_pause():
     choice_commits = copy.deepcopy(choices)
     language_commits = copy.deepcopy(language)
+    speed_commits = copy.deepcopy(speed)
     surface = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
-    pygame.draw.rect(surface, '#afbfd1', [100, 100, 600, 375], 0, 5)
-    pygame.draw.rect(surface, '#607fa3', [100, 100, 600, 375], 5, 5)
-    resume_btn = Button(160, 200, 'A', False, surface)
+    pygame.draw.rect(surface, '#afbfd1', [50, 100, 700, 375], 0, 5)
+    pygame.draw.rect(surface, '#607fa3', [50, 100, 700, 375], 5, 5)
+    resume_btn = Button(110, 200, 'A', False, surface)
     resume_btn.draw()
-    quit_btn = Button(450, 200, 'X', False, surface)
+    quit_btn = Button(400, 200, 'X', False, surface)
     quit_btn.draw()
 
-    surface.blit(label_font.render('МЕНЮ', True, 'white'), (115, 115))
-    surface.blit(label_font.render('СТАРТ!', True, 'white'), (205, 190))
-    surface.blit(label_font.render('ВЫХОД', True, 'white'), (492, 190))
-    surface.blit(label_font.render('Длина слов:', True, 'white'), (110, 250))
-    surface.blit(header_font.render('Русс', True, 'white'), (280, 410))
-    surface.blit(header_font.render('Англ', True, 'white'), (420, 410))
+    surface.blit(label_font.render('МЕНЮ', True, 'white'), (65, 115))
+    surface.blit(header_font.render('Уровень', True, 'white'), (490, 115))
+    surface.blit(header_font.render('сложности:', True, 'white'), (505, 145))
+    surface.blit(label_font.render('СТАРТ!', True, 'white'), (155, 190))
+    surface.blit(label_font.render('ВЫХОД', True, 'white'), (442, 190))
+    surface.blit(label_font.render('Длина слов:', True, 'white'), (70, 250))
+    surface.blit(header_font.render('Русс', True, 'white'), (230, 410))
+    surface.blit(header_font.render('Англ', True, 'white'), (370, 410))
+    surface.blit(level_font.render('Легко', True, 'white'), (645, 180))
+    surface.blit(level_font.render('Средне', True, 'white'), (638, 270))
+    surface.blit(level_font.render('Сложно', True, 'white'), (638, 360))
 
     for i in range(len(choices)):
-        btn = Button(160 + (i * 80), 330, str(i + 2), False, surface)
+        btn = Button(110 + (i * 80), 330, str(i + 2), False, surface)
         btn.draw()
         if btn.clicked:
             if choice_commits[i]:
@@ -140,11 +148,11 @@ def draw_pause():
             else:
                 choice_commits[i] = True
         if choices[i]:
-            pygame.draw.circle(surface, '#5aadd1', (160 + (i * 80), 330), 35, 5)
+            pygame.draw.circle(surface, '#5aadd1', (110 + (i * 80), 330), 35, 5)
 
     butt_text = ['R', 'E']
     for i in range(len(language)):
-        btn = Button(240 + (i * 320), 420, butt_text[i], False, surface)
+        btn = Button(190 + (i * 320), 420, butt_text[i], False, surface)
         btn.draw()
         if btn.clicked:
             if language_commits[i]:
@@ -152,10 +160,22 @@ def draw_pause():
             else:
                 language_commits[i] = True
         if language[i]:
-            pygame.draw.circle(surface, '#5aadd1', (240 + (i * 320), 420), 35, 5)
+            pygame.draw.circle(surface, '#5aadd1', (190 + (i * 320), 420), 35, 5)
+
+    speed_text = ['L', 'M', 'H']
+    for i in range(len(speed)):
+        btn = Button(690, 235 + (i * 90), speed_text[i], False, surface)
+        btn.draw()
+        if btn.clicked:
+            if speed_commits[i]:
+                speed_commits[i] = False
+            else:
+                speed_commits[i] = True
+        if speed[i]:
+            pygame.draw.circle(surface, '#5aadd1', (690, 235 + (i * 90)), 35, 5)
 
     screen.blit(surface, (0, 0))
-    return resume_btn.clicked, choice_commits, quit_btn.clicked, language_commits
+    return resume_btn.clicked, choice_commits, quit_btn.clicked, language_commits, speed_commits
 
 
 def check_answer(scor):
@@ -168,12 +188,13 @@ def check_answer(scor):
     return scor
 
 
-def generate_level(test: tuple[float, float] = (2, 3)):
+def generate_level():
     word_objs = []
     include = []
     vertical_spacing = (HEIGHT - 150) // level
     len_index = []
     length = 1
+    test = ()
 
     if language[0]:
         wordlist = words_rus.lower().split('\n')
@@ -197,14 +218,27 @@ def generate_level(test: tuple[float, float] = (2, 3)):
         if choices[i]:
             include.append((len_index[i], len_index[i + 1]))
 
+    if speed[0]:
+        test = (1, 2)
+    if speed[1]:
+        test = (2, 3)
+    if speed[2]:
+        test = (3.5, 5)
+
+    if True not in speed:
+        speed[1] = True
+    if speed[0] == speed[1] or speed[1] == speed[2] or speed[0] == speed[2] or speed[0] == speed[1] == speed[2]:
+        speed[1] = True
+        speed[0], speed[2] = False, False
+
     for i in range(level):
-        speed = random.choice(test)  # Сделать кнопки для выбора скорости
+        sp = random.choice(test)
         y_pos = random.randint(50 + (i * vertical_spacing), (i + 1) * vertical_spacing)
         x_pos = random.randint(WIDTH, WIDTH + 1000)
         ind_sel = random.choice(include)
         index = random.randint(ind_sel[0], ind_sel[1])
         text = wordlist[index].lower()
-        new_word = Word(text, speed, x_pos, y_pos)
+        new_word = Word(text, sp, x_pos, y_pos)
         word_objs.append(new_word)
 
     return word_objs
@@ -225,7 +259,7 @@ while running:
     timer.tick(fps)
     pause_butt = draw_screen()
     if paused:
-        resume_butt, changes, quit_butt, changed_lang = draw_pause()
+        resume_butt, changes, quit_butt, changed_lang, changed_speed = draw_pause()
         if resume_butt:
             paused = False
         if quit_butt:
@@ -284,6 +318,7 @@ while running:
             if event.button == 1:
                 choices = changes
                 language = changed_lang
+                speed = changed_speed
 
     if pause_butt:
         paused = True
