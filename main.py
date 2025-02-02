@@ -1,19 +1,22 @@
 import pygame
 import random
 import copy
+# Импортируем нужные библиотеки
 
-pygame.init()
+pygame.init()  # Инициализируем Pygame
 
+# Загружаем английские и русские слова из текстовых файлов
 words_eng = open('assets/files/eng_words.txt', encoding='utf-8').read()
 words_rus = open('assets/files/rus_words.txt', encoding='utf-8').read()
 
 WIDTH = 800
-HEIGHT = 600
-screen = pygame.display.set_mode([WIDTH, HEIGHT])
-pygame.display.set_caption('Клавиатурные бега')
-surface = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+HEIGHT = 600  # Устанавливаем размеры окна игры
+screen = pygame.display.set_mode([WIDTH, HEIGHT])  # Создаем окно заданных размеров
+pygame.display.set_caption('Клавиатурные бега')  # Устанавливаем заголовок окна
+surface = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)  # Создаем поверхность для отрисовки
 timer = pygame.time.Clock()
 fps = 60
+
 level = 1
 active_string = ''
 score = 0
@@ -29,6 +32,8 @@ new_level = True
 choices = [False, True, False, False, False, False, False]
 language = [False, True]
 speed = [True, False, False]
+# Устанавливаем необходимые значения по умолчанию,
+# а также создаем список из русского и английского алфавита
 
 header_font = pygame.font.Font('assets/fonts/PressStart2P.ttf', 25)
 level_font = pygame.font.Font('assets/fonts/PressStart2P.ttf', 17)
@@ -37,6 +42,7 @@ banner_font = pygame.font.Font('assets/fonts/DotGothic16.ttf', 28)
 string_font = pygame.font.Font('assets/fonts/PressStart2P.ttf', 44)
 label_font = pygame.font.Font('assets/fonts/PressStart2P.ttf', 35)
 font = pygame.font.Font('assets/fonts/PressStart2P.ttf', 44)
+# Задаем шрифты для отображения текста на экране
 
 pygame.mixer.init()
 pygame.mixer.music.load('assets/music/29 Palms.mp3')
@@ -52,13 +58,16 @@ correct.set_volume(0.2)
 wrong.set_volume(0.3)
 lose.set_volume(0.5)
 lives_less.set_volume(0.5)
+# Задаем музыку для проигрывания во время игры
 
 file = open('assets/files/high_score.txt', 'r')
 read = file.readlines()
 high_score = int(read[0])
 file.close()
+# Берем значение рекордного счета из файла
 
 
+# Класс для прорисовки слов на экране
 class Word:
     def __init__(self, text, sp, x_pos, y_pos):
         self.x_pos = x_pos
@@ -76,6 +85,7 @@ class Word:
         self.x_pos -= self.speed
 
 
+# Класс для прорисовки кнопок на экране
 class Button:
     def __init__(self, x_pos, y_pos, text, clicked, surf):
         self.x_pos = x_pos
@@ -97,6 +107,7 @@ class Button:
         self.surf.blit(pause_font.render(self.text, True, 'white'), (self.x_pos - 16, self.y_pos - 28))
 
 
+# Класс для прорисовки основного экрана игры
 def draw_screen():
     pygame.draw.rect(screen, '#39608c', [0, HEIGHT - 100, WIDTH, 100])
     pygame.draw.rect(screen, 'white', [0, 0, WIDTH, HEIGHT], 5)
@@ -115,6 +126,7 @@ def draw_screen():
     return pause_btn.clicked
 
 
+# Класс для прорисовки экрана паузы
 def draw_pause():
     choice_commits = copy.deepcopy(choices)
     language_commits = copy.deepcopy(language)
@@ -139,6 +151,7 @@ def draw_pause():
     surface.blit(level_font.render('Средне', True, 'white'), (638, 270))
     surface.blit(level_font.render('Сложно', True, 'white'), (638, 360))
 
+    # Кнопки выбора длин слов
     for i in range(len(choices)):
         btn = Button(110 + (i * 80), 330, str(i + 2), False, surface)
         btn.draw()
@@ -150,6 +163,7 @@ def draw_pause():
         if choices[i]:
             pygame.draw.circle(surface, '#5aadd1', (110 + (i * 80), 330), 35, 5)
 
+    # Кнопки выбора языка
     butt_text = ['R', 'E']
     for i in range(len(language)):
         btn = Button(190 + (i * 320), 420, butt_text[i], False, surface)
@@ -162,6 +176,7 @@ def draw_pause():
         if language[i]:
             pygame.draw.circle(surface, '#5aadd1', (190 + (i * 320), 420), 35, 5)
 
+    # Кнопки выбора уровня сложности
     speed_text = ['L', 'M', 'H']
     for i in range(len(speed)):
         btn = Button(690, 235 + (i * 90), speed_text[i], False, surface)
@@ -178,6 +193,7 @@ def draw_pause():
     return resume_btn.clicked, choice_commits, quit_btn.clicked, language_commits, speed_commits
 
 
+#  Метод для проверки введенного пользователем ответа
 def check_answer(scor):
     for wrd in word_objects:
         if wrd.text == submit:
@@ -188,6 +204,7 @@ def check_answer(scor):
     return scor
 
 
+# Метод для генерации уровня
 def generate_level():
     word_objs = []
     include = []
@@ -208,6 +225,7 @@ def generate_level():
             len_index.append(i)
     len_index.append(len(wordlist))
 
+    # Установка значений по умолчанию
     if True not in choices:
         choices[0] = True
     if True not in language:
@@ -218,16 +236,17 @@ def generate_level():
         if choices[i]:
             include.append((len_index[i], len_index[i + 1]))
 
+    #  Установка уровня сложности в зависимости от выбора пользователя
     if speed[0]:
-        test = (1, 2)
+        test = [1, 1.2, 1.4, 1.6, 1.8, 2]
     if speed[1]:
-        test = (2, 3)
+        test = [2, 2.2, 2.4, 2.6, 2.8, 3]
     if speed[2]:
-        test = (3.5, 5)
+        test = [3.5, 3.2, 3.4, 3.6, 3.8, 4]
 
     if True not in speed:
         speed[1] = True
-    if speed[0] == speed[1] or speed[1] == speed[2] or speed[0] == speed[2] or speed[0] == speed[1] == speed[2]:
+    if (speed[0] and speed[1]) or (speed[1] and speed[2]) or (speed[0] and speed[2]) or (speed[0] and speed[1] and speed[2]):
         speed[1] = True
         speed[0], speed[2] = False, False
 
@@ -244,6 +263,7 @@ def generate_level():
     return word_objs
 
 
+#  Метод для записи лучшего результата в отдельный файл
 def check_high_score():
     global high_score
     if score > high_score:
@@ -265,21 +285,22 @@ while running:
         if quit_butt:
             check_high_score()
             running = False
+        # Проверка значений кнопок выхода и старта игры
 
     if new_level and not paused:
-        word_objects = generate_level()
+        word_objects = generate_level()  # Генерация уровня
         new_level = False
     else:
         for w in word_objects:
             w.draw()
             if not paused:
                 w.update()
-            if w.x_pos < -200:
+            if w.x_pos < -200:  # Если пользователь не успел дописать слово
                 word_objects.remove(w)
                 lives -= 1
                 score -= 20
                 lives_less.play()
-    if len(word_objects) <= 0 and not paused:
+    if len(word_objects) <= 0 and not paused:  # Переход на новый уровень
         level += 1
         new_level = True
 
@@ -293,7 +314,7 @@ while running:
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            check_high_score()
+            check_high_score()  # Запись рекорда при выходе из игры
             running = False
 
         if event.type == pygame.KEYDOWN:
@@ -332,6 +353,7 @@ while running:
         new_level = True
         check_high_score()
         score = 0
+        # Замена значений на значения по умолчанию при пройгрыше
 
     pygame.display.flip()
 pygame.quit()
